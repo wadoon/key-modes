@@ -14,6 +14,36 @@
 
 ;;;; Proof Scripts
 
+(defconst KEY_BUFFER_NAME "*KeY*")
+
+(defvar *key-server-buffer* nil)
+(defvar *key-server-process* nil)
+
+(defun connect-to-key ()
+  (unless *key-server-buffer*
+    (setq *key-server-buffer*
+	  (get-buffer-create KEY_BUFFER_NAME)))
+
+  (when *key-server-process*
+      (delete-process *key-server-process*))
+
+  (setq *key-server-process*
+	(open-network-stream "keyserver"
+			     *key-server-buffer*
+			     "localhost" 61534
+			     :type 'plain)))
+
+
+(defun send-to-key (region)
+  (interactive "p")
+  (beginning-of-line)
+  (push-mark)
+  (search-forward ";")
+
+  (let ((command (buffer-substring (region-beginning) (region-end))))
+    (process-send-string *key-server-process* (concat command "\n"))))
+
+
 (defvar key-prove-script-keywords
   '())
 
@@ -59,6 +89,9 @@
   "KeY Proof Script"
   ;;"Major Mode for editing Key Proof Scripts files
   ;; See http://key-project.org/proofscripts (not avaiable yet)"
+
+  (bind-key (kbd "C-c C-c") #'send-to-key)
+
 
   (setq font-lock-defaults key-prove-script-font-lock-defaults)
 
