@@ -1,0 +1,67 @@
+rule andLeft;
+rule andRight;
+rule impRight;
+rule andLeft;
+rule close;
+
+auto steps=30000;
+
+cut "value1 = value2";
+
+exit;
+
+   instantiate var="x" occ="3" with="42"
+
+instantiate formula="\forall int x; f(x) = 42" with="23"
+
+   instantiate formula="\exists int x; f(x) = 42" with="23"
+
+   instantiate hide var=x value="x_0"
+
+leave
+
+macro autopilot
+macro autopilot-prep
+macro split-prop
+macro upd-simpl
+macro heap-simpl
+
+
+ rule andRight;
+       # if there is only one matching spot on the sequent
+
+   rule eqSymm formula="a=b";
+       # changes sequent "a=b ==> c=d" to "b=a ==> c=d"
+       # "rule eqSymm;" alone would have been ambiguous.
+
+   rule eqSymm formula="a=b->c=d" occ=2
+       # changes sequent "a=b->c=d ==>" to "a=b->d=c ==>".
+       # occurrence number needed since there are
+       # two possible applications on the formula
+
+
+script '/path/to/other/file.script';
+
+
+
+   select formula="{ x:=1 }y < x";
+       # search for the formula anywhere
+   select succedent formula="wellFormed(someHeap)";
+       # search only the succedent for the formula
+
+
+smt;
+       # invoke Z3
+   smt solver="Z3,yices";
+       # a comma separated list of solvers can be specified.
+
+   tryclose;
+   tryclose steps=2000;
+       # spend 2000 steps on each open goal
+
+
+Write your on proof commands
+----------------------------
+
+to be done.
+Contact Mattias, if you are interested.
