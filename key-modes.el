@@ -19,19 +19,31 @@
 (defvar *key-server-buffer* nil)
 (defvar *key-server-process* nil)
 
+(defun disconnect-from-key ()
+  (interactive)
+  (ignore-errors
+    (process-send-eof *key-server-process*))
+  (delete-process *key-server-process*)
+  (setq *key-server-process* nil))
+
 (defun connect-to-key ()
-  (unless *key-server-buffer*
+  (interactive)
+  (when *key-server-process*
+    (disconnect-from-key))
+
+  (unless (and *key-server-buffer* (buffer-live-p *key-server-buffer*))
     (setq *key-server-buffer*
 	  (get-buffer-create KEY_BUFFER_NAME)))
 
-  (when *key-server-process*
-      (delete-process *key-server-process*))
+
 
   (setq *key-server-process*
 	(open-network-stream "keyserver"
 			     *key-server-buffer*
 			     "localhost" 61534
-			     :type 'plain)))
+			     :type 'plain))
+  (message "Connected to KeY")
+  *key-server-process*)
 
 
 (defun send-to-key (region)
@@ -41,7 +53,10 @@
   (search-forward ";")
 
   (let ((command (buffer-substring (region-beginning) (region-end))))
-    (process-send-string *key-server-process* (concat command "\n"))))
+    (process-send-string *key-server-process* (concat command "\n"))
+
+
+    ))
 
 
 (defvar key-prove-script-keywords
@@ -90,8 +105,13 @@
   ;;"Major Mode for editing Key Proof Scripts files
   ;; See http://key-project.org/proofscripts (not avaiable yet)"
 
-  (bind-key (kbd "C-c C-c") #'send-to-key)
+  (bind-key (kbd "<C-enter>") #'send-to-key key-prove-script-mode-map)
+  (bind-key (kbd "C-j") #'send-to-key key-prove-script-mode-map)
 
+  (bind-key (kbd "C-c C-c")  #'connect-to-key key-prove-script-mode-map)
+  (bind-key (kbd "C-c C-d")  #'disconnect-from-key key-prove-script-mode-map)
+
+  (bind-key [(control return)] #'send-to-key key-prove-script-mode-map)
 
   (setq font-lock-defaults key-prove-script-font-lock-defaults)
 
